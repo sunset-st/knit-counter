@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#c96b6b">
+<title>뜨개 단수 카운터</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1 id="topTitle">뜨개 단수 카운터</h1>
+</header>
+
+<main id="app"></main>
+
+<template id="project-list-template">
+  <section class="project-list">
+    <button id="addProjectBtn" class="add-btn">+ 새 프로젝트</button>
+    <ul id="projectItems" class="project-items"></ul>
+  </section>
+</template>
+
+<template id="project-item-template">
+  <li class="project-item">
+    <button class="project-open">
+      <span class="project-name"></span>
+      <span class="project-row"></span>
+    </button>
+    <button class="project-delete" title="삭제">✕</button>
+  </li>
+</template>
+
+<template id="counter-template">
+  <section class="counter">
+    <button id="backBtn" class="back-btn">← 목록</button>
+    <div class="counter-name" id="counterName"></div>
+    <div class="repeat-note" id="repeatNote"></div>
+    <div class="counter-display" id="counterDisplay">0</div>
+    <div class="counter-buttons">
+      <button id="minusBtn" class="counter-btn minus">−</button>
+      <button id="plusBtn" class="counter-btn plus">+</button>
+    </div>
+    <div class="counter-actions">
+      <button id="resetBtn" class="text-btn">초기화</button>
+      <button id="editBtn" class="text-btn">편집</button>
+    </div>
+  </section>
+</template>
+
+<template id="edit-template">
+  <section class="edit-form">
+    <label>프로젝트 이름
+      <input id="editName" type="text" maxlength="40">
+    </label>
+    <label>반복 단수 알림 (예: 4단마다 코 줄임, 0이면 사용 안함)
+      <input id="editRepeat" type="number" min="0" inputmode="numeric">
+    </label>
+    <div class="counter-actions">
+      <button id="editCancel" class="text-btn">취소</button>
+      <button id="editSave" class="add-btn">저장</button>
+    </div>
+  </section>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

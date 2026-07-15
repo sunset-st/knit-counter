@@ -1,0 +1,11 @@
+{
+  "name": "뜨개 단수 카운터",
+  "short_name": "단수카운터",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#faf6f2",
+  "theme_color": "#c96b6b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
