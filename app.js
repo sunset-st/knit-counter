@@ -1,3 +1,26 @@
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+const db = getFirestore(firebaseApp);
+
 const STORAGE_KEY = "knitCounterProjects";
 
 function loadProjects() {
@@ -8,18 +31,44 @@ function loadProjects() {
   }
 }
 
-function saveProjects(projects) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+function cacheProjects(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 let projects = loadProjects();
 let currentId = null;
+let currentUser = null;
+let unsubscribeCloud = null;
 
 const app = document.getElementById("app");
 const topTitle = document.getElementById("topTitle");
+const logoutBtn = document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", () => signOut(auth));
+
+function syncToCloud() {
+  cacheProjects(projects);
+  if (!currentUser) return;
+  setDoc(doc(db, "users", currentUser.uid), {
+    projects,
+    updatedAt: serverTimestamp(),
+  }).catch(() => {});
+}
 
 function findProject(id) {
   return projects.find((p) => p.id === id);
+}
+
+function renderLogin() {
+  currentId = null;
+  logoutBtn.hidden = true;
+  topTitle.textContent = "뜨개 단수 카운터";
+  const tpl = document.getElementById("login-template");
+  app.innerHTML = "";
+  app.appendChild(tpl.content.cloneNode(true));
+  document.getElementById("googleLoginBtn").addEventListener("click", () => {
+    signInWithRedirect(auth, provider);
+  });
 }
 
 function renderList() {
@@ -48,7 +97,7 @@ function renderList() {
       e.stopPropagation();
       if (confirm(`"${p.name}" 프로젝트를 삭제할까요?`)) {
         projects = projects.filter((x) => x.id !== p.id);
-        saveProjects(projects);
+        syncToCloud();
         renderList();
       }
     });
@@ -60,7 +109,7 @@ function renderList() {
     if (!name) return;
     const newProject = { id: Date.now().toString(), name: name.trim(), row: 0, repeat: 0 };
     projects.push(newProject);
-    saveProjects(projects);
+    syncToCloud();
     renderCounter(newProject.id);
   });
 }
@@ -102,14 +151,14 @@ function renderCounter(id) {
 
   document.getElementById("plusBtn").addEventListener("click", () => {
     project.row += 1;
-    saveProjects(projects);
+    syncToCloud();
     display.textContent = project.row;
     updateRepeatNote(project);
   });
 
   document.getElementById("minusBtn").addEventListener("click", () => {
     if (project.row > 0) project.row -= 1;
-    saveProjects(projects);
+    syncToCloud();
     display.textContent = project.row;
     updateRepeatNote(project);
   });
@@ -117,7 +166,7 @@ function renderCounter(id) {
   document.getElementById("resetBtn").addEventListener("click", () => {
     if (confirm("현재 단수를 0으로 초기화할까요?")) {
       project.row = 0;
-      saveProjects(projects);
+      syncToCloud();
       display.textContent = project.row;
       updateRepeatNote(project);
     }
@@ -144,12 +193,51 @@ function renderEdit(id) {
     const repeat = parseInt(document.getElementById("editRepeat").value, 10) || 0;
     if (name) project.name = name;
     project.repeat = repeat;
-    saveProjects(projects);
+    syncToCloud();
     renderCounter(id);
   });
 }
 
-renderList();
+async function initCloudSync(uid) {
+  const userDocRef = doc(db, "users", uid);
+  const snap = await getDoc(userDocRef);
+  if (snap.exists()) {
+    projects = snap.data().projects || [];
+    cacheProjects(projects);
+  } else {
+    await setDoc(userDocRef, { projects, updatedAt: serverTimestamp() });
+  }
+
+  if (unsubscribeCloud) unsubscribeCloud();
+  unsubscribeCloud = onSnapshot(userDocRef, (docSnap) => {
+    if (!docSnap.exists()) return;
+    const remoteProjects = docSnap.data().projects || [];
+    if (JSON.stringify(remoteProjects) === JSON.stringify(projects)) return;
+    projects = remoteProjects;
+    cacheProjects(projects);
+    if (currentId && findProject(currentId)) {
+      renderCounter(currentId);
+    } else {
+      renderList();
+    }
+  });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    logoutBtn.hidden = false;
+    await initCloudSync(user.uid);
+    renderList();
+  } else {
+    currentUser = null;
+    if (unsubscribeCloud) {
+      unsubscribeCloud();
+      unsubscribeCloud = null;
+    }
+    renderLogin();
+  }
+});
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

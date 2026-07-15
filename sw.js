@@ -1,9 +1,10 @@
-const CACHE_NAME = "knit-counter-v1";
+const CACHE_NAME = "knit-counter-v2";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
   "app.js",
+  "firebase-config.js",
   "manifest.json",
   "icon.svg",
 ];
@@ -23,6 +24,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) {
+    // Firebase Auth/Firestore/CDN requests: always go to network, never cache.
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
