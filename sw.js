@@ -1,4 +1,4 @@
-const CACHE_NAME = "knit-counter-v2";
+const CACHE_NAME = "knit-counter-v3";
 const ASSETS = [
   "./",
   "index.html",
