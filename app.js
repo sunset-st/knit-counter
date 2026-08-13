@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -67,7 +67,11 @@ function renderLogin() {
   app.innerHTML = "";
   app.appendChild(tpl.content.cloneNode(true));
   document.getElementById("googleLoginBtn").addEventListener("click", () => {
-    signInWithRedirect(auth, provider);
+    signInWithPopup(auth, provider).catch((err) => {
+      if (err.code !== "auth/popup-closed-by-user") {
+        alert("로그인에 실패했어요. 다시 시도해주세요.");
+      }
+    });
   });
 }
 
