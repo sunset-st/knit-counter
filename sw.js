@@ -1,4 +1,4 @@
-const CACHE_NAME = "knit-counter-v3";
+const CACHE_NAME = "knit-counter-v4";
 const ASSETS = [
   "./",
   "index.html",
@@ -29,7 +29,15 @@ self.addEventListener("fetch", (event) => {
     // Firebase Auth/Firestore/CDN requests: always go to network, never cache.
     return;
   }
+  // Network-first: always try to get the latest file when online, and
+  // only fall back to the cached copy if the network request fails.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
