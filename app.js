@@ -107,7 +107,7 @@ function renderList() {
   document.getElementById("addProjectBtn").addEventListener("click", () => {
     const name = prompt("프로젝트 이름을 입력하세요");
     if (!name) return;
-    const newProject = { id: Date.now().toString(), name: name.trim(), row: 0, repeat: 0 };
+    const newProject = { id: Date.now().toString(), name: name.trim(), row: 0, repeat: 0, target: 0 };
     projects.push(newProject);
     syncToCloud();
     renderCounter(newProject.id);
@@ -132,6 +132,58 @@ function updateRepeatNote(project) {
   }
 }
 
+function updateTargetNote(project) {
+  const note = document.getElementById("targetNote");
+  if (!project.target || project.target <= 0) {
+    note.textContent = "";
+    note.classList.remove("alert");
+    return;
+  }
+  if (project.row >= project.target) {
+    note.textContent = `목표 ${project.target}단 도달! 여기서부터 패턴이 바뀌어요.`;
+    note.classList.add("alert");
+  } else {
+    const remaining = project.target - project.row;
+    note.textContent = `목표까지 ${remaining}단 남음 (목표 ${project.target}단)`;
+    note.classList.remove("alert");
+  }
+}
+
+function addHistory(project, action) {
+  project.history = project.history || [];
+  project.history.unshift({ action, time: Date.now() });
+  project.history = project.history.slice(0, 3);
+}
+
+function renderHistory(project) {
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
+  const history = project.history || [];
+  if (history.length === 0) {
+    const li = document.createElement("li");
+    li.className = "history-empty";
+    li.textContent = "아직 기록이 없어요.";
+    list.appendChild(li);
+    return;
+  }
+  history.forEach((h) => {
+    const li = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = h.action;
+    const time = document.createElement("span");
+    time.className = "history-time";
+    time.textContent = new Date(h.time).toLocaleString("ko-KR", {
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    li.appendChild(label);
+    li.appendChild(time);
+    list.appendChild(li);
+  });
+}
+
 function renderCounter(id) {
   currentId = id;
   const project = findProject(id);
@@ -146,29 +198,40 @@ function renderCounter(id) {
   const display = document.getElementById("counterDisplay");
   display.textContent = project.row;
   updateRepeatNote(project);
+  updateTargetNote(project);
+  renderHistory(project);
 
   document.getElementById("backBtn").addEventListener("click", renderList);
 
   document.getElementById("plusBtn").addEventListener("click", () => {
     project.row += 1;
+    addHistory(project, "+1");
     syncToCloud();
     display.textContent = project.row;
     updateRepeatNote(project);
+    updateTargetNote(project);
+    renderHistory(project);
   });
 
   document.getElementById("minusBtn").addEventListener("click", () => {
     if (project.row > 0) project.row -= 1;
+    addHistory(project, "-1");
     syncToCloud();
     display.textContent = project.row;
     updateRepeatNote(project);
+    updateTargetNote(project);
+    renderHistory(project);
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     if (confirm("현재 단수를 0으로 초기화할까요?")) {
       project.row = 0;
+      addHistory(project, "초기화");
       syncToCloud();
       display.textContent = project.row;
       updateRepeatNote(project);
+      updateTargetNote(project);
+      renderHistory(project);
     }
   });
 
@@ -185,14 +248,17 @@ function renderEdit(id) {
 
   document.getElementById("editName").value = project.name;
   document.getElementById("editRepeat").value = project.repeat || 0;
+  document.getElementById("editTarget").value = project.target || 0;
 
   document.getElementById("editCancel").addEventListener("click", () => renderCounter(id));
 
   document.getElementById("editSave").addEventListener("click", () => {
     const name = document.getElementById("editName").value.trim();
     const repeat = parseInt(document.getElementById("editRepeat").value, 10) || 0;
+    const target = parseInt(document.getElementById("editTarget").value, 10) || 0;
     if (name) project.name = name;
     project.repeat = repeat;
+    project.target = target;
     syncToCloud();
     renderCounter(id);
   });
