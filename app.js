@@ -228,8 +228,8 @@ function renderCounter(id) {
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
-    if (confirm("현재 단수를 0으로 초기화할까요?")) {
-      project.row = 0;
+    if (confirm("현재 단수를 1로 초기화할까요?")) {
+      project.row = 1;
       addHistory(project, "초기화");
       syncToCloud();
       display.textContent = project.row;
@@ -239,7 +239,21 @@ function renderCounter(id) {
     }
   });
 
-  document.getElementById("editBtn").addEventListener("click", () => renderEdit(id));
+  document.getElementById("editRowBtn").addEventListener("click", () => {
+    const input = prompt("현재 단수를 입력하세요", project.row);
+    if (input === null) return;
+    const value = parseInt(input, 10);
+    if (Number.isNaN(value) || value < 0) return;
+    project.row = value;
+    addHistory(project, `직접 입력 (${value}단)`);
+    syncToCloud();
+    display.textContent = project.row;
+    updateRepeatNote(project);
+    updateTargetNote(project);
+    renderHistory(project);
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", () => renderEdit(id));
 }
 
 function renderEdit(id) {
