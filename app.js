@@ -111,7 +111,7 @@ function renderList() {
   document.getElementById("addProjectBtn").addEventListener("click", () => {
     const name = prompt("프로젝트 이름을 입력하세요");
     if (!name) return;
-    const newProject = { id: Date.now().toString(), name: name.trim(), row: 0, repeat: 0, target: 0 };
+    const newProject = { id: Date.now().toString(), name: name.trim(), row: 0, repeat: 0, target: 0, note: "" };
     projects.push(newProject);
     syncToCloud();
     renderCounter(newProject.id);
@@ -188,6 +188,17 @@ function renderHistory(project) {
   });
 }
 
+function updateNoteDisplay(project) {
+  const note = document.getElementById("noteDisplay");
+  if (project.note) {
+    note.textContent = project.note;
+    note.hidden = false;
+  } else {
+    note.textContent = "";
+    note.hidden = true;
+  }
+}
+
 function renderCounter(id) {
   currentId = id;
   const project = findProject(id);
@@ -203,6 +214,7 @@ function renderCounter(id) {
   display.textContent = project.row;
   updateRepeatNote(project);
   updateTargetNote(project);
+  updateNoteDisplay(project);
   renderHistory(project);
 
   document.getElementById("backBtn").addEventListener("click", renderList);
@@ -267,6 +279,7 @@ function renderEdit(id) {
   document.getElementById("editName").value = project.name;
   document.getElementById("editRepeat").value = project.repeat || 0;
   document.getElementById("editTarget").value = project.target || 0;
+  document.getElementById("editNote").value = project.note || "";
 
   document.getElementById("editCancel").addEventListener("click", () => renderCounter(id));
 
@@ -274,9 +287,11 @@ function renderEdit(id) {
     const name = document.getElementById("editName").value.trim();
     const repeat = parseInt(document.getElementById("editRepeat").value, 10) || 0;
     const target = parseInt(document.getElementById("editTarget").value, 10) || 0;
+    const note = document.getElementById("editNote").value.trim();
     if (name) project.name = name;
     project.repeat = repeat;
     project.target = target;
+    project.note = note;
     syncToCloud();
     renderCounter(id);
   });

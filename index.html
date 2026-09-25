@@ -48,6 +48,7 @@
     <div class="counter-name" id="counterName"></div>
     <div class="repeat-note" id="repeatNote"></div>
     <div class="target-note" id="targetNote"></div>
+    <div class="note-display" id="noteDisplay" hidden></div>
     <div class="counter-display" id="counterDisplay">0</div>
     <div class="counter-buttons">
       <button id="minusBtn" class="counter-btn minus">−</button>
@@ -75,6 +76,9 @@
     </label>
     <label>목표 단수 (예: 20단부터 패턴 변경, 0이면 사용 안함)
       <input id="editTarget" type="number" min="0" inputmode="numeric">
+    </label>
+    <label>메모 (예: 왼쪽 소매 12단까지 완료)
+      <textarea id="editNote" rows="3" maxlength="200"></textarea>
     </label>
     <div class="counter-actions">
       <button id="editCancel" class="text-btn">취소</button>
