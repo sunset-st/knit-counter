@@ -177,15 +177,14 @@ body {
 
 .note-display {
   width: 100%;
-  background: #fff8e8;
-  border: 1px solid #f0e0b0;
-  border-radius: 10px;
-  padding: 10px 14px;
   font-size: 0.9rem;
   color: var(--text);
-  margin-bottom: 10px;
   white-space: pre-wrap;
   text-align: left;
+}
+
+.note-spacer {
+  height: 14px;
 }
 
 .edit-form textarea {
