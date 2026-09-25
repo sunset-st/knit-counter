@@ -180,7 +180,7 @@ body {
   font-size: 0.9rem;
   color: var(--text);
   white-space: pre-wrap;
-  text-align: left;
+  text-align: center;
 }
 
 .note-spacer {
